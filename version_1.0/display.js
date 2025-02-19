@@ -1,4 +1,5 @@
 //The color transparency represents infection level.
+// hihihihi
 
 class Display {
   constructor(_displaySize, _pixelSize) {
