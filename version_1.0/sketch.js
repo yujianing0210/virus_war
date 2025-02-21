@@ -24,8 +24,9 @@ function setupCanvas() {
   console.log("Canvas setup completed");
 
   display = new Display(displaySize, pixelSize);
-  playerOne = new Player(color(255, 0, 0), parseInt(random(0, displaySize / 2)), displaySize);
-  playerTwo = new Player(color(0, 0, 255), parseInt(random(displaySize / 2, displaySize)), displaySize);
+  // colors of infected cells //  
+  playerOne = new Player(color(50,205,50), parseInt(random(0, displaySize / 2)), displaySize); // 暗绿色
+  playerTwo = new Player(color(153,15,125), parseInt(random(displaySize / 2, displaySize)), displaySize); //暗粉色
   controller = new Controller();
 
   // Initialize infection grid

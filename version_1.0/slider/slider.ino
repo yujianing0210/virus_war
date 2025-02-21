@@ -2,7 +2,7 @@ const int potPin1 = A0;  // Player One's slider (left/right)
 const int potPin2 = A1;  // Player Two's slider (left/right)
 int lastPosition1 = 0;
 int lastPosition2 = 0;
-int threshold = 30;  // Minimum movement required to trigger an action
+int threshold = 10;  // Minimum movement required to trigger an action
 
 void setup() {
     Serial.begin(9600);

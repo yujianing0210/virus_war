@@ -32,8 +32,8 @@ class Controller {
                 }
 
                 // Show Players (draw after infection grid so they remain visible)
-                display.setPixel(playerOne.position, color(255, 0, 0)); // Solid Red
-                display.setPixel(playerTwo.position, color(0, 0, 255)); // Solid Blue
+                display.setPixel(playerOne.position, color(0,250,154)); // 荧光绿
+                display.setPixel(playerTwo.position, color(255, 0, 203)); // 荧光粉
 
                 break;
 
