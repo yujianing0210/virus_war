@@ -112,6 +112,9 @@ function endGame() {
 
     console.log(`🏆 Game Over! Winner's color fills the grid.`);
 
+    // 🚨 Fill the entire pixel line with the winner's original color
+    display.setAllPixels(winnerColor);
+
     // 🚨 Explicitly clear the last bacteria and losing player position
     display.setPixel(playerOne.position, winnerColor);
     display.setPixel(playerTwo.position, winnerColor);
@@ -119,9 +122,6 @@ function endGame() {
     // 🚨 Explicitly remove any bacteria from memory
     bacteriaOne = null;
     bacteriaTwo = null;
-
-    // 🚨 Fill the entire pixel line with the winner's original color
-    display.setAllPixels(winnerColor);
 
     // 🚨 Ensure the display updates by calling display.show() before stopping the loop
     redraw();
