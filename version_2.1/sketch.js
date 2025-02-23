@@ -24,9 +24,10 @@ function setupCanvas() {
 function setupGame() {
     // Player setup
     // Player One's bacteria launch point (leftmost cell)
-    playerOne = { position: 0, color: color(255, 0, 0) };  // 1 - Red 
+    playerOne = new Player(0, color(255, 0, 0));  // 1 - Red 
+    console.log("Player1");
     // Player Two's bacteria launch point (rightmost cell)
-    playerTwo = { position: displaySize - 1, color: color(0, 0, 255) }; // 2 - Blue
+    playerTwo = new Player(displaySize - 1, color(0, 0, 255)); // 2 - Blue
 
     // NPC setup
     alcohol = new Alcohol(); // Initialize Alcohol NPC
@@ -46,9 +47,12 @@ function draw() {
 
     alcohol.update(xOffset); // Update Alcohol NPC
 
-    // Render player cells
-    display.setPixel(playerOne.position, playerOne.color);
-    display.setPixel(playerTwo.position, playerTwo.color);
+    // 🚨 Render player cells with updated color
+    fill(playerOne.color);
+    rect(xOffset + (playerOne.position * pixelSize), yOffset, pixelSize, pixelSize);
+
+    fill(playerTwo.color);
+    rect(xOffset + (playerTwo.position * pixelSize), yOffset, pixelSize, pixelSize);
 
     // Render bacteria if they exist
     if (bacteriaOne && bacteriaOne.isAlive) bacteriaOne.update();
@@ -93,6 +97,40 @@ function keyPressed() {
 }
 
 // 处理游戏结束逻辑
-function endGame(winner) {
-    document.getElementById("winner-status").innerText = `Winner: ${winner}`;
+function endGame() {
+    let winnerColor;
+    
+    if (playerOne.health <= 0) {
+        winnerColor = playerTwo.baseColor; // Player Two wins, fill with blue
+        // winnerColor = color(0, 0, 255);
+    } else if (playerTwo.health <= 0) {
+        winnerColor = playerOne.baseColor; // Player One wins, fill with red
+        // winnerColor = color(255, 0, 0);
+    } else {
+        return; // If no one has lost, do nothing
+    }
+
+    console.log(`🏆 Game Over! Winner's color fills the grid.`);
+
+    // 🚨 Explicitly clear the last bacteria and losing player position
+    display.setPixel(playerOne.position, winnerColor);
+    display.setPixel(playerTwo.position, winnerColor);
+
+    // 🚨 Explicitly remove any bacteria from memory
+    bacteriaOne = null;
+    bacteriaTwo = null;
+
+    // 🚨 Fill the entire pixel line with the winner's original color
+    display.setAllPixels(winnerColor);
+
+    // 🚨 Ensure the display updates by calling display.show() before stopping the loop
+    redraw();
+    display.show();
+
+    // 🚨 Delay stopping the loop slightly to allow final rendering
+    setTimeout(() => {
+        noLoop(); // Stop the game loop AFTER colors have updated
+    }, 100); // Small delay (100ms) to allow rendering
 }
+
+

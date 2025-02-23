@@ -29,6 +29,21 @@ class Bacteria {
             return;
         }
 
+        // 🚨 Check if bacteria hit a player
+        if (nextPosition === playerOne.position && this !== bacteriaOne) {
+            console.log(`💥 Bacteria hit Player One at position ${playerOne.position}!`);
+            playerOne.takeDamage();
+            this.die();
+            return;
+        } 
+
+        if (nextPosition === playerTwo.position && this !== bacteriaTwo) {
+            console.log(`💥 Bacteria hit Player Two at position ${playerTwo.position}!`);
+            playerTwo.takeDamage();
+            this.die();
+            return;
+        }
+
         // Remove previous bacteria position (only if it's not occupied by a player)
         if (this.position !== playerOne.position && this.position !== playerTwo.position) {
             display.setPixel(this.position, color(255, 255, 255));
@@ -70,7 +85,6 @@ class Bacteria {
     
         new Animation(this.position); // Trigger death animation
     }
-    
 
     infectOpponent() {
         console.log("🔥 Bacteria reached opponent's base!");
