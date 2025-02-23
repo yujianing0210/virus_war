@@ -30,6 +30,11 @@ function setupGame() {
     alcohol = new Alcohol(); // Initialize Alcohol NPC
     bacteriaOne = null;
     bacteriaTwo = null;
+
+    // Manually add key event listener
+    document.addEventListener("keydown", (event) => {
+        keyPressed(event);
+    });
 }
 
 function setupWebSocket() {
@@ -48,7 +53,8 @@ function setupWebSocket() {
 
         // Player One controls
         if (command === "shoot1") {
-            bacteriaOne = new Bacteria(playerOne.position, 1, playerOne.color);
+            let bacteriaColor = color(255, 150, 150); // Light Red for Player One's bacteria
+            bacteriaOne = new Bacteria(playerOne.position, 1, bacteriaColor);
         } else if (command === "left1") {
             if (bacteriaOne) bacteriaOne.changeDirection(-1);
         } else if (command === "right1") {
@@ -57,7 +63,8 @@ function setupWebSocket() {
 
         // Player Two controls
         if (command === "shoot2") {
-            bacteriaTwo = new Bacteria(playerTwo.position, -1, playerTwo.color);
+            let bacteriaColor = color(150, 150, 255); // Light Blue for Player Two's bacteria
+            bacteriaTwo = new Bacteria(playerTwo.position, -1, bacteriaColor);
         } else if (command === "left2") {
             if (bacteriaTwo) bacteriaTwo.changeDirection(-1);
         } else if (command === "right2") {
@@ -89,9 +96,6 @@ function draw() {
     // Render bacteria if they exist
     if (bacteriaOne) bacteriaOne.update();
     if (bacteriaTwo) bacteriaTwo.update();
-
-    // 更新 UI 状态
-    // document.getElementById("game-status").innerText = `Level: ${level}`;
 }
 
 // 处理游戏结束逻辑
@@ -100,21 +104,34 @@ function endGame(winner) {
 }
 
 function keyPressed() {
-    if (!useKeyboard) return; // Only allow keyboard if WebSocket is disconnected
+    if (!useKeyboard) {
+        console.log("❌ Keyboard disabled (WebSocket is connected).");
+        return; // Only allow keyboard if WebSocket is disconnected
+    }
+
+    console.log(`🎮 Key Pressed: ${key}`);
 
     if (key === 'A' || key === 'a') {
-        if (bacteriaOne) bacteriaOne.changeDirection(-1); // Move Player One's bacteria left
+        console.log("⬅️ Player One moving left");
+        if (bacteriaOne) bacteriaOne.changeDirection(-1);
     } else if (key === 'D' || key === 'd') {
-        if (bacteriaOne) bacteriaOne.changeDirection(1); // Move Player One's bacteria right
+        console.log("➡️ Player One moving right");
+        if (bacteriaOne) bacteriaOne.changeDirection(1);
     } else if (key === 'S' || key === 's') {
-        bacteriaOne = new Bacteria(playerOne.position, 1, playerOne.color); // Shoot bacteria
+        console.log("🎯 Player One shooting bacteria!");
+        let bacteriaColor = color(255, 150, 150);
+        bacteriaOne = new Bacteria(playerOne.position, 1, bacteriaColor);
     }
 
     if (key === 'J' || key === 'j') {
-        if (bacteriaTwo) bacteriaTwo.changeDirection(-1); // Move Player Two's bacteria left
+        console.log("⬅️ Player Two moving left");
+        if (bacteriaTwo) bacteriaTwo.changeDirection(-1);
     } else if (key === 'L' || key === 'l') {
-        if (bacteriaTwo) bacteriaTwo.changeDirection(1); // Move Player Two's bacteria right
+        console.log("➡️ Player Two moving right");
+        if (bacteriaTwo) bacteriaTwo.changeDirection(1);
     } else if (key === 'K' || key === 'k') {
-        bacteriaTwo = new Bacteria(playerTwo.position, -1, playerTwo.color); // Shoot bacteria
+        console.log("🎯 Player Two shooting bacteria!");
+        let bacteriaColor = color(150, 150, 255);
+        bacteriaTwo = new Bacteria(playerTwo.position, -1, bacteriaColor);
     }
 }

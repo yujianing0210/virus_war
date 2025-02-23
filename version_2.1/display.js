@@ -1,24 +1,37 @@
+// Display System:
+// Controls the rendering of the 1D pixel grid.
+
 class Display {
-    constructor(displaySize, pixelSize) {
-        this.displaySize = displaySize;
-        this.pixelSize = pixelSize;
-        this.displayBuffer = Array(this.displaySize).fill([255, 255, 255]); // White background
+    constructor(_displaySize, _pixelSize) {
+        this.displaySize = _displaySize;
+        this.pixelSize = _pixelSize;
+        this.initColor = color(255, 255, 255);  // Set background to white
+        this.displayBuffer = Array(this.displaySize).fill(this.initColor);
+        
+        // Calculate offsets for centering
+        this.xOffset = (width - (this.displaySize * this.pixelSize)) / 2; // Center horizontally
+        this.yOffset = height / 2 - this.pixelSize / 2; // Move to center
     }
 
-    setPixel(index, colorValue) {
-        if (index >= 0 && index < this.displaySize) {
-            this.displayBuffer[index] = colorValue;
+    setPixel(_index, _color) {
+        this.displayBuffer[_index] = _color;
+    }
+
+    setAllPixels(_color) {
+        for (let i = 0; i < this.displaySize; i++) {
+          this.displayBuffer[i] = _color;
         }
     }
-
+  
     show() {
         for (let i = 0; i < this.displaySize; i++) {
-            fill(this.displayBuffer[i][0], this.displayBuffer[i][1], this.displayBuffer[i][2]);
-            rect(i * this.pixelSize, 0, this.pixelSize, this.pixelSize);
+            fill(this.displayBuffer[i]);
+            rect(this.xOffset + (i * this.pixelSize), this.yOffset, this.pixelSize, this.pixelSize);
+            // rect((i * this.pixelSize), this.yOffset, this.pixelSize, this.pixelSize);
         }
     }
 
     clear() {
-        this.displayBuffer.fill([255, 255, 255]); // Reset all pixels to white
+        this.displayBuffer.fill(this.initColor);
     }
 }

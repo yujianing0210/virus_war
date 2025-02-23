@@ -1,18 +1,22 @@
+// Alcohol NPC:
+// A hazard that randomly appears in the middle and kills any bacteria that touch it.
+
 class Alcohol {
-    constructor(displaySize) {
-        this.positions = [parseInt(displaySize / 2 - 2), parseInt(displaySize / 2 - 1), parseInt(displaySize / 2)];
+    constructor() {
+        this.positions = [width / 2 - pixelSize, width / 2, width / 2 + pixelSize];
         this.isVisible = true;
+        this.yOffset = height / 2 - pixelSize / 2; // Align with the centered pixel line
     }
 
     update() {
-        if (frameCount % 60 === 0) { // Toggle visibility every second
+        if (frameCount % 60 === 0) {
             this.isVisible = !this.isVisible;
         }
 
         if (this.isVisible) {
-            fill(0, 255, 0);
+            fill(255, 255, 0);
             for (let pos of this.positions) {
-                rect(pos * 10, 0, 20, 20);
+                rect(pos, this.yOffset, pixelSize, pixelSize); // Draw at new Y position
             }
         }
     }

@@ -1,40 +1,94 @@
-let display, alcohol;
-let bacteriaOne = null;
-let bacteriaTwo = null;
-let socket;
+// Game Logic:
+// Compared to version_2.0, we omit websocket and arduino, simply using keyboard to control the game (for easier debugging).
+
+let useKeyboard = true; // Use keyboard to control
+let displaySize = 30;  // Number of pixels across the screen
+let pixelSize = 20;    // Size of each pixel
+let playerOne, playerTwo;
+let alcohol;
+let bacteriaOne, bacteriaTwo;
 
 function setup() {
-    createCanvas(600, 20);
-    display = new Display(60, 20);
-    alcohol = new Alcohol(60);
-    setupWebSocket();
+    setupCanvas();
+    setupGame();
 }
 
-function setupWebSocket() {
-    socket = new WebSocket('ws://localhost:8080');
-
-    socket.onmessage = function(event) {
-        let command = event.data.trim();
-        if (command === "left1" && bacteriaOne) bacteriaOne.changeDirection(-1);
-        if (command === "right1" && bacteriaOne) bacteriaOne.changeDirection(1);
-        if (command === "shoot1") bacteriaOne = new Bacteria(0, 1, [255, 0, 0]);
-    };
+function setupCanvas() {
+    // 设定画布的大小尺寸和比例
+    canvasWidth = displaySize * pixelSize * 1.5; 
+    canvasHeight = canvasWidth * 0.6;
+    createCanvas(canvasWidth, canvasHeight);
+    display = new Display(displaySize, pixelSize);
 }
 
-function keyPressed() {
-    if (key === 'A' || key === 'a' && bacteriaTwo) bacteriaTwo.changeDirection(-1);
-    if (key === 'D' || key === 'd' && bacteriaTwo) bacteriaTwo.changeDirection(1);
-    if (key === 'S' || key === 's') bacteriaTwo = new Bacteria(59, -1, [0, 0, 255]);
+function setupGame() {
+    // Player setup
+    // Player One's bacteria launch point (leftmost cell)
+    playerOne = { position: 0, color: color(255, 0, 0) };  // 1 - Red 
+    // Player Two's bacteria launch point (rightmost cell)
+    playerTwo = { position: displaySize - 1, color: color(0, 0, 255) }; // 2 - Blue
+
+    // NPC setup
+    alcohol = new Alcohol(); // Initialize Alcohol NPC
+
+    // Bacteria setup: 游戏开始双方自动发射出一个细菌。细菌颜色和移动速度可调。
+    bacteriaOne = new Bacteria(playerOne.position, 1, color(255, 150, 150), 15);  // 1 - Light Red，speed = 15
+    bacteriaTwo = new Bacteria(playerTwo.position, -1, color(150, 150, 255), 10); // 2 - Light Blue, speed = 10
+
 }
 
 function draw() {
-    background(255);
-    display.show();
-    alcohol.update();
-    if (bacteriaOne) bacteriaOne.update();
-    if (bacteriaTwo) bacteriaTwo.update();
+    background(color(175,200,170));  // canvas background color
+    display.show();   // 显示pixel line
+
+    // let xOffset = (width - (displaySize * pixelSize)) / 2; 
+    // let yOffset = height / 2 - pixelSize / 2;
+
+    alcohol.update(); // Update Alcohol NPC
+
+    // Render player cells
+    display.setPixel(playerOne.position, playerOne.color);
+    display.setPixel(playerTwo.position, playerTwo.color);
+
+    // Render bacteria if they exist
+    if (bacteriaOne && bacteriaOne.isAlive) bacteriaOne.update();
+    if (bacteriaTwo && bacteriaTwo.isAlive) bacteriaTwo.update();
 }
 
+function keyPressed() {
+    if (!useKeyboard) {
+        console.log("❌ Keyboard disabled (WebSocket is connected).");
+        return; // Only allow keyboard if WebSocket is disconnected
+    }
+
+    console.log(`🎮 Key Pressed: ${key}`);
+
+    if (key === 'A' || key === 'a') {
+        console.log("⬅️ Player1 moving left");
+        if (bacteriaOne) bacteriaOne.changeDirection(-1);
+    } else if (key === 'D' || key === 'd') {
+        console.log("➡️ Player1 moving right");
+        if (bacteriaOne) bacteriaOne.changeDirection(1);
+    } else if (key === 'S' || key === 's') {
+        console.log("🎯 Player1 shooting bacteria!");
+        let bacteriaColor = color(255, 150, 150);
+        bacteriaOne = new Bacteria(playerOne.position, 1, bacteriaColor);
+    }
+
+    if (key === 'J' || key === 'j') {
+        console.log("⬅️ Player2 moving left");
+        if (bacteriaTwo) bacteriaTwo.changeDirection(-1);
+    } else if (key === 'L' || key === 'l') {
+        console.log("➡️ Player2 moving right");
+        if (bacteriaTwo) bacteriaTwo.changeDirection(1);
+    } else if (key === 'K' || key === 'k') {
+        console.log("🎯 Player2 shooting bacteria!");
+        let bacteriaColor = color(150, 150, 255);
+        bacteriaTwo = new Bacteria(playerTwo.position, -1, bacteriaColor);
+    }
+}
+
+// 处理游戏结束逻辑
 function endGame(winner) {
-    document.getElementById("winner-status").innerText = `🏆 Winner: ${winner}`;
+    document.getElementById("winner-status").innerText = `Winner: ${winner}`;
 }

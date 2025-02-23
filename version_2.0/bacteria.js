@@ -3,6 +3,7 @@
 
 class Bacteria {
     constructor(position, direction, color) {
+        console.log(`🦠 New bacteria spawned at position ${position}, moving ${direction > 0 ? "right" : "left"}`);
         this.position = position;
         this.direction = direction;
         this.color = color;
@@ -33,6 +34,7 @@ class Bacteria {
     }
 
     die() {
+        console.log(`💀 Bacteria at position ${this.position} died.`);
         this.isAlive = false;
         new Animation(this.position); // 触发动画
     }
