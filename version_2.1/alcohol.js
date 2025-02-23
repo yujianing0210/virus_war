@@ -3,25 +3,29 @@
 
 class Alcohol {
     constructor() {
-        this.positions = [width / 2 - pixelSize, width / 2, width / 2 + pixelSize];
+        let center = Math.floor(displaySize / 2);
+        this.positions = [center - 1, center]; // Use grid indices instead of pixel values
         this.isVisible = true;
-        this.yOffset = height / 2 - pixelSize / 2; // Align with the centered pixel line
+        this.yOffset = height / 2 - pixelSize / 2;
     }
 
-    update() {
-        if (frameCount % 60 === 0) {
+    update(xOffset) { // Pass xOffset from draw()
+        if (frameCount % 120 === 0) {
             this.isVisible = !this.isVisible;
+            // console.log(`🚨 Alcohol NPC is now ${this.isVisible ? "VISIBLE" : "INVISIBLE"}`);
         }
-
+    
         if (this.isVisible) {
-            fill(255, 255, 0);
+            fill(0, 255, 0); // Green color for alcohol NPC
             for (let pos of this.positions) {
-                rect(pos, this.yOffset, pixelSize, pixelSize); // Draw at new Y position
+                let pixelX = xOffset + (pos * pixelSize); // 🚨 Fix: Add xOffset to align correctly
+                rect(pixelX, this.yOffset, pixelSize, pixelSize);
             }
         }
     }
-
+    
     isHit(bacteriaPosition) {
+        // console.log(`🔍 Checking collision: Bacteria at ${bacteriaPosition}, Alcohol at ${this.positions}`);
         return this.isVisible && this.positions.includes(bacteriaPosition);
     }
 }

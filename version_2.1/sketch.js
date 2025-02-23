@@ -32,7 +32,7 @@ function setupGame() {
     alcohol = new Alcohol(); // Initialize Alcohol NPC
 
     // Bacteria setup: 游戏开始双方自动发射出一个细菌。细菌颜色和移动速度可调。
-    bacteriaOne = new Bacteria(playerOne.position, 1, color(255, 150, 150), 15);  // 1 - Light Red，speed = 15
+    bacteriaOne = new Bacteria(playerOne.position, 1, color(255, 150, 150), 10);  // 1 - Light Red，speed = 15
     bacteriaTwo = new Bacteria(playerTwo.position, -1, color(150, 150, 255), 10); // 2 - Light Blue, speed = 10
 
 }
@@ -41,10 +41,10 @@ function draw() {
     background(color(235,160,175));  // canvas background color
     display.show();   // 显示pixel line
 
-    // let xOffset = (width - (displaySize * pixelSize)) / 2; 
-    // let yOffset = height / 2 - pixelSize / 2;
+    let xOffset = (width - (displaySize * pixelSize)) / 2; 
+    let yOffset = height / 2 - pixelSize / 2;
 
-    alcohol.update(); // Update Alcohol NPC
+    alcohol.update(xOffset); // Update Alcohol NPC
 
     // Render player cells
     display.setPixel(playerOne.position, playerOne.color);
@@ -72,7 +72,9 @@ function keyPressed() {
     } else if (key === 'S' || key === 's') {
         console.log("🎯 Player1 shooting bacteria!");
         let bacteriaColor = color(255, 150, 150);
-        bacteriaOne = new Bacteria(playerOne.position, 1, bacteriaColor);
+        if (!bacteriaOne || !bacteriaOne.isAlive) {  // 🚨 Only create new bacteria if none exist
+            bacteriaOne = new Bacteria(playerOne.position, 1, bacteriaColor, 15);
+        }
     }
 
     if (key === 'J' || key === 'j') {
@@ -84,7 +86,9 @@ function keyPressed() {
     } else if (key === 'K' || key === 'k') {
         console.log("🎯 Player2 shooting bacteria!");
         let bacteriaColor = color(150, 150, 255);
-        bacteriaTwo = new Bacteria(playerTwo.position, -1, bacteriaColor);
+        if (!bacteriaTwo || !bacteriaTwo.isAlive) {  // 🚨 Only create new bacteria if none exist
+            bacteriaTwo = new Bacteria(playerTwo.position, -1, bacteriaColor, 10);
+        }
     }
 }
 

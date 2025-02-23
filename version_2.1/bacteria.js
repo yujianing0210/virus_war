@@ -21,6 +21,13 @@ class Bacteria {
         this.frameCounter = 0; // Reset frame counter after moving
 
         let nextPosition = this.position + this.direction;
+        
+        // 🚨 NEW: Check for collision with Alcohol NPC before moving
+        if (alcohol.isHit(nextPosition)) {
+            console.log(`💀 Bacteria at ${nextPosition} was killed by Alcohol NPC!`);
+            this.die();
+            return;
+        }
 
         // Remove previous bacteria position (only if it's not occupied by a player)
         if (this.position !== playerOne.position && this.position !== playerTwo.position) {
@@ -48,9 +55,22 @@ class Bacteria {
 
     die() {
         console.log(`💀 Bacteria at position ${this.position} died.`);
-        this.isAlive = false;
-        new Animation(this.position);
+    
+        // 🚨 Clear bacteria from screen immediately
+        display.setPixel(this.position, color(255, 255, 255));
+    
+        this.isAlive = false; // Stop bacteria updates
+    
+        // 🚨 Ensure bacteria reference is removed so players can fire again
+        if (this === bacteriaOne) {
+            bacteriaOne = null;
+        } else if (this === bacteriaTwo) {
+            bacteriaTwo = null;
+        }
+    
+        new Animation(this.position); // Trigger death animation
     }
+    
 
     infectOpponent() {
         console.log("🔥 Bacteria reached opponent's base!");
