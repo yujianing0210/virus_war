@@ -38,7 +38,7 @@ function setupGame() {
 }
 
 function draw() {
-    background(color(175,200,170));  // canvas background color
+    background(color(235,160,175));  // canvas background color
     display.show();   // 显示pixel line
 
     // let xOffset = (width - (displaySize * pixelSize)) / 2; 
