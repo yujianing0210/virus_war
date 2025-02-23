@@ -2,6 +2,8 @@
 // Handles players, bacteria movement, and WebSocket communication.
 
 let socket;
+let useKeyboard = false; // Fallback flag
+
 let displaySize = 30;  // Number of pixels across the screen
 let pixelSize = 20;    // Size of each pixel
 let infectionGrid = [];
@@ -33,7 +35,14 @@ function setupGame() {
 function setupWebSocket() {
     socket = new WebSocket('ws://localhost:8080');
 
+    socket.onopen = function() {
+        console.log("✅ WebSocket connected successfully");
+        useKeyboard = false; // Disable keyboard fallback
+    };
+
     socket.onmessage = function(event) {
+        useKeyboard = false; // Ensure keyboard is disabled when WebSocket is active
+
         let command = event.data.trim();
         console.log("📡 Received from Arduino:", command);
 
@@ -58,14 +67,15 @@ function setupWebSocket() {
 
     socket.onerror = function(error) {
         console.error("❌ WebSocket error:", error);
+        useKeyboard = true; // Enable keyboard fallback
     };
 
     socket.onclose = function() {
-        console.warn("⚠️ WebSocket connection closed. Reconnecting...");
-        setTimeout(setupWebSocket, 3000);
+        console.warn("⚠️ WebSocket disconnected. Enabling keyboard controls...");
+        useKeyboard = true; // Enable keyboard fallback
+        setTimeout(setupWebSocket, 3000); // Try reconnecting every 3 seconds
     };
 }
-
 
 function draw() {
     background(255);  // White background
@@ -87,4 +97,24 @@ function draw() {
 // 处理游戏结束逻辑
 function endGame(winner) {
     document.getElementById("winner-status").innerText = `Winner: ${winner}`;
+}
+
+function keyPressed() {
+    if (!useKeyboard) return; // Only allow keyboard if WebSocket is disconnected
+
+    if (key === 'A' || key === 'a') {
+        if (bacteriaOne) bacteriaOne.changeDirection(-1); // Move Player One's bacteria left
+    } else if (key === 'D' || key === 'd') {
+        if (bacteriaOne) bacteriaOne.changeDirection(1); // Move Player One's bacteria right
+    } else if (key === 'S' || key === 's') {
+        bacteriaOne = new Bacteria(playerOne.position, 1, playerOne.color); // Shoot bacteria
+    }
+
+    if (key === 'J' || key === 'j') {
+        if (bacteriaTwo) bacteriaTwo.changeDirection(-1); // Move Player Two's bacteria left
+    } else if (key === 'L' || key === 'l') {
+        if (bacteriaTwo) bacteriaTwo.changeDirection(1); // Move Player Two's bacteria right
+    } else if (key === 'K' || key === 'k') {
+        bacteriaTwo = new Bacteria(playerTwo.position, -1, playerTwo.color); // Shoot bacteria
+    }
 }
