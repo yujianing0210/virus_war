@@ -1,4 +1,4 @@
-//The color transparency represents infection level.
+//Controls the rendering of the 1D pixel grid.
 
 class Display {
   constructor(_displaySize, _pixelSize) {

@@ -1,4 +1,5 @@
-// 控制酒精NPC
+// Alcohol NPC:
+// A hazard that randomly appears in the middle and kills any bacteria that touch it.
 
 class Alcohol {
     constructor() {
@@ -7,7 +8,7 @@ class Alcohol {
     }
 
     update() {
-        if (frameCount % 60 === 0) {
+        if (frameCount % 60 === 0) { // blinks on and off every second
             this.isVisible = !this.isVisible;
         }
 

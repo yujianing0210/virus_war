@@ -1,4 +1,5 @@
-// 细菌控制
+// Bacteria:
+// The player's main attack unit that moves in 1D space.
 
 class Bacteria {
     constructor(position, direction, color) {
@@ -13,6 +14,12 @@ class Bacteria {
 
         // Remove previous position
         display.setPixel(this.position, color(255, 255, 255));
+
+        // If bacteria reaches the opponent's base, infect the cell
+        if (nextPosition < 0 || nextPosition >= displaySize) {
+            this.infectOpponent();
+            return;
+        }
 
         // Move bacteria
         this.position += this.direction;

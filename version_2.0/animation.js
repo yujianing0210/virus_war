@@ -1,3 +1,6 @@
+// Visual Effects:
+// Provides animations when bacteria die.
+
 class Animation {
     constructor(position) {
         this.position = position;
