@@ -25,7 +25,7 @@ function setupGame() {
     // Player setup
     // Player One's bacteria launch point (leftmost cell)
     playerOne = new Player(0, color(255, 0, 0));  // 1 - Red 
-    console.log("Player1");
+    //console.log("Player1 created");
     // Player Two's bacteria launch point (rightmost cell)
     playerTwo = new Player(displaySize - 1, color(0, 0, 255)); // 2 - Blue
 
@@ -33,8 +33,8 @@ function setupGame() {
     alcohol = new Alcohol(); // Initialize Alcohol NPC
 
     // Bacteria setup: 游戏开始双方自动发射出一个细菌。细菌颜色和移动速度可调。
-    bacteriaOne = new Bacteria(playerOne.position, 1, color(255, 150, 150), 10);  // 1 - Light Red，speed = 15
-    bacteriaTwo = new Bacteria(playerTwo.position, -1, color(150, 150, 255), 10); // 2 - Light Blue, speed = 10
+    bacteriaOne = new Bacteria(playerOne.position, 1, color(255, 150, 150), 15);  // 1 - Light Red，speed = 15
+    bacteriaTwo = new Bacteria(playerTwo.position, -1, color(150, 150, 255), 15); // 2 - Light Blue, speed = 10
 
 }
 

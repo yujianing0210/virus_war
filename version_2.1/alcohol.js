@@ -10,7 +10,7 @@ class Alcohol {
     }
 
     update(xOffset) { // Pass xOffset from draw()
-        if (frameCount % 300 === 0) {
+        if (frameCount % 120 === 0) {
             this.isVisible = !this.isVisible;
             // console.log(`🚨 Alcohol NPC is now ${this.isVisible ? "VISIBLE" : "INVISIBLE"}`);
         }

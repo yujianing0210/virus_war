@@ -8,7 +8,7 @@ class Player {
 
     takeDamage() {
         if (this.health > 0) {
-            this.health -= 35; // Lose 25% health per hit
+            this.health -= 25; // Lose 25% health per hit
             this.darkenColor(); // Update color
             console.log(`⚠️ Player at position ${this.position} took damage! Health: ${this.health}%`);
 
