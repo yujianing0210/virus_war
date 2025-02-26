@@ -14,55 +14,45 @@ class Bacteria {
 
     update() {
         if (!this.isAlive) return;
-
-        this.frameCounter++; // Count frames
-
-        if (this.frameCounter < this.speed) return; // Skip movement until enough frames pass
-        this.frameCounter = 0; // Reset frame counter after moving
-
-        let nextPosition = this.position + this.direction;
-        
-        // 🚨 NEW: Check for collision with Alcohol NPC before moving
+    
+        this.frameCounter++; 
+        if (this.frameCounter < this.speed) return;
+        this.frameCounter = 0;
+    
+        let nextPosition = (this.position + this.direction + displaySize) % displaySize; // 🚨 Wrap around
+    
+        // 🚨 Check if bacteria hit Alcohol NPC
         if (alcohol.isHit(nextPosition)) {
             console.log(`💀 Bacteria at ${nextPosition} was killed by Alcohol NPC!`);
             this.die();
             return;
         }
-
-        // 🚨 Check if bacteria hit a player
+    
+        // 🚨 Check if bacteria hit an opponent
         if (nextPosition === playerOne.position && this !== bacteriaOne) {
-            console.log(`💥 Bacteria hit Player One at position ${playerOne.position}!`);
+            console.log(`💥 Bacteria hit Player One at ${playerOne.position}!`);
             playerOne.takeDamage();
             this.die();
             return;
         } 
-
+    
         if (nextPosition === playerTwo.position && this !== bacteriaTwo) {
-            console.log(`💥 Bacteria hit Player Two at position ${playerTwo.position}!`);
+            console.log(`💥 Bacteria hit Player Two at ${playerTwo.position}!`);
             playerTwo.takeDamage();
             this.die();
             return;
         }
-
-        // Remove previous bacteria position (only if it's not occupied by a player)
-        if (this.position !== playerOne.position && this.position !== playerTwo.position) {
-            display.setPixel(this.position, color(255, 255, 255));
-        }
-
-        // If bacteria reaches the opponent's base, infect the cell
-        if (nextPosition < 0 || nextPosition >= displaySize) {
-            this.infectOpponent();
-            return;
-        }
-
-        // Move bacteria
+    
+        // Remove previous bacteria position
+        display.setPixel(this.position, color(255, 255, 255));
+    
+        // Move bacteria (with wrap-around logic)
         this.position = nextPosition;
-
-        // Draw bacteria in new position
-        if (this.position !== playerOne.position && this.position !== playerTwo.position) {
-            display.setPixel(this.position, this.color);
-        }
+    
+        // Draw new position
+        display.setPixel(this.position, this.color);
     }
+    
 
     changeDirection(newDir) {
         this.direction = newDir;

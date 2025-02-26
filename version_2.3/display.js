@@ -24,12 +24,30 @@ class Display {
     }
   
     show() {
+        translate(width / 2, height / 2); // Move origin to center
+        let outerRadius = min(width, height) / 2.1; // Outer boundary
+        let innerRadius = outerRadius / 1.09; // Inner boundary to create the ring
+        let angleStep = TWO_PI / this.displaySize; // Divide ring into equal segments
+    
         for (let i = 0; i < this.displaySize; i++) {
-            fill(this.displayBuffer[i]);
-            rect(this.xOffset + (i * this.pixelSize), this.yOffset, this.pixelSize, this.pixelSize);
-            // rect((i * this.pixelSize), this.yOffset, this.pixelSize, this.pixelSize);
+            let startAngle = i * angleStep;
+            let endAngle = (i + 1) * angleStep;
+    
+            fill(this.displayBuffer[i]); // Use stored color for each segment
+            stroke(0); // Black outline for sector boundaries
+    
+            beginShape();
+            vertex(innerRadius * cos(startAngle), innerRadius * sin(startAngle)); // Inner ring point 1
+            vertex(outerRadius * cos(startAngle), outerRadius * sin(startAngle)); // Outer ring point 1
+            vertex(outerRadius * cos(endAngle), outerRadius * sin(endAngle)); // Outer ring point 2
+            vertex(innerRadius * cos(endAngle), innerRadius * sin(endAngle)); // Inner ring point 2
+            endShape(CLOSE);
         }
     }
+    
+    
+    
+    
 
     clear() {
         this.displayBuffer.fill(this.initColor);

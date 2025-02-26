@@ -2,8 +2,8 @@
 // Compared to version_2.0, we omit websocket and arduino, simply using keyboard to control the game (for easier debugging).
 
 let useKeyboard = true; // Use keyboard to control
-let displaySize = 30;  // Number of pixels across the screen
-let pixelSize = 20;    // Size of each pixel
+let displaySize = 80;  // Number of pixels across the screen
+let pixelSize = 10;    // Size of each pixel
 let playerOne, playerTwo;
 let alcohol;
 let bacteriaOne, bacteriaTwo;
@@ -20,28 +20,28 @@ function setup() {
 
 function setupCanvas() {
     // 设定画布的大小尺寸和比例
-    canvasWidth = displaySize * pixelSize * 1.5; 
-    canvasHeight = canvasWidth * 0.6;
+    canvasWidth = displaySize * pixelSize * 1.5; // 1200 pixels
+    canvasHeight = canvasWidth * 0.6; // 720 pixels
     createCanvas(canvasWidth, canvasHeight);
     display = new Display(displaySize, pixelSize);
 }
 
 function setupGame() {
     // Player setup
-    // 🎲 Random positions with at least a 2-pixel interval between players
-  let playerOnePos = Math.floor(random(0, displaySize - 2));
-  let playerTwoPos;
+    // 🎲 Random positions with at least a 10-pixel interval between players
+    let playerOnePos = Math.floor(random(0, displaySize - 1));
+    let playerTwoPos;
 
-  do {
-      playerTwoPos = Math.floor(random(0, displaySize - 2));
-  } while (Math.abs(playerOnePos - playerTwoPos) < 2);  // Ensure 2-pixel separation
+    do {
+        playerTwoPos = Math.floor(random(0, displaySize - 1));
+    } while (Math.abs(playerOnePos - playerTwoPos) < 10);  // Ensure 2-pixel separation
 
-  console.log(`🔴 Player One starts at position ${playerOnePos}`);
-  console.log(`🔵 Player Two starts at position ${playerTwoPos}`);
+    console.log(`🔴 Player One starts at position ${playerOnePos}`);
+    console.log(`🔵 Player Two starts at position ${playerTwoPos}`);
 
-  // Initialize players at random positions
-  playerOne = new Player(playerOnePos, color(129, 78, 237));
-  playerTwo = new Player(playerTwoPos, color(78, 148, 110));
+    // Initialize players at random positions
+    playerOne = new Player(playerOnePos, color(129, 78, 237));
+    playerTwo = new Player(playerTwoPos, color(78, 148, 110));
 
     // NPC setup
     alcohol = new Alcohol(); // Initialize Alcohol NPC
@@ -53,27 +53,45 @@ function setupGame() {
 }
 
 function draw() {
-    // 🌄 Draw the background image instead of a solid color
-    background(bgImage); 
-
+    background(bgImage);
     display.show();
 
-    let xOffset = (width - (displaySize * pixelSize)) / 2; 
-    let yOffset = height / 2 - pixelSize / 2;
+    let xOffset = 0; //width / 2;
+    let yOffset = 0; // height / 2;
+    let outerRadius = min(width, height) / 2.1; // Outer boundary
+    let innerRadius = outerRadius / 1.09; // Inner boundary to create the ring
+    let angleStep = TWO_PI / displaySize; // Divide ring into equal segments
 
-    alcohol.update(xOffset); // Update Alcohol NPC
+    // 🚨 Ensure Players Are Rendered as Grid Cells Instead of Ellipses
+    for (let i = 0; i < displaySize; i++) {
+        let startAngle = i * angleStep;
+        let endAngle = (i + 1) * angleStep;
 
-    // 🚨 Render player cells with updated color
-    fill(playerOne.color);
-    rect(xOffset + (playerOne.position * pixelSize), yOffset, pixelSize, pixelSize);
+        if (i === playerOne.position) {
+            fill(playerOne.color);
+        } else if (i === playerTwo.position) {
+            fill(playerTwo.color);
+        } else {
+            continue; // Skip other cells, as they are drawn in `display.show()`
+        }
 
-    fill(playerTwo.color);
-    rect(xOffset + (playerTwo.position * pixelSize), yOffset, pixelSize, pixelSize);
+        stroke(0);
+        beginShape();
+        vertex(innerRadius * cos(startAngle) + xOffset, innerRadius * sin(startAngle) + yOffset);
+        vertex(outerRadius * cos(startAngle) + xOffset, outerRadius * sin(startAngle) + yOffset);
+        vertex(outerRadius * cos(endAngle) + xOffset, outerRadius * sin(endAngle) + yOffset);
+        vertex(innerRadius * cos(endAngle) + xOffset, innerRadius * sin(endAngle) + yOffset);
+        endShape(CLOSE);
+    }
+
+    // 🚨 Ensure Alcohol NPC is Displayed at the Correct Position
+    alcohol.update(xOffset, yOffset, outerRadius);
 
     // Render bacteria if they exist
     if (bacteriaOne && bacteriaOne.isAlive) bacteriaOne.update();
     if (bacteriaTwo && bacteriaTwo.isAlive) bacteriaTwo.update();
 }
+
 
 function keyPressed() {
     if (!useKeyboard) {

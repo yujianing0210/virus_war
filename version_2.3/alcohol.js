@@ -9,20 +9,33 @@ class Alcohol {
         this.yOffset = height / 2 - pixelSize / 2;
     }
 
-    update(xOffset) { // Pass xOffset from draw()
+    update(xOffset, yOffset, outerRadius) {
         if (frameCount % 120 === 0) {
             this.isVisible = !this.isVisible;
-            // console.log(`🚨 Alcohol NPC is now ${this.isVisible ? "VISIBLE" : "INVISIBLE"}`);
         }
     
         if (this.isVisible) {
-            fill(255, 248, 196); // Color for alcohol NPC
-            for (let pos of this.positions) {
-                let pixelX = xOffset + (pos * pixelSize); // 🚨 Fix: Add xOffset to align correctly
-                rect(pixelX, this.yOffset, pixelSize, pixelSize);
+            let angleStep = TWO_PI / displaySize;
+            let innerRadius = outerRadius / 1.09; // Match inner ring size
+    
+            fill(255, 248, 196); // Yellow for Alcohol NPC
+            stroke(0);
+    
+            for (let i = 0; i < this.positions.length; i++) {
+                let startAngle = this.positions[i] * angleStep;
+                let endAngle = (this.positions[i] + 1) * angleStep;
+    
+                beginShape();
+                vertex(innerRadius * cos(startAngle) + xOffset, innerRadius * sin(startAngle) + yOffset);
+                vertex(outerRadius * cos(startAngle) + xOffset, outerRadius * sin(startAngle) + yOffset);
+                vertex(outerRadius * cos(endAngle) + xOffset, outerRadius * sin(endAngle) + yOffset);
+                vertex(innerRadius * cos(endAngle) + xOffset, innerRadius * sin(endAngle) + yOffset);
+                endShape(CLOSE);
             }
         }
     }
+    
+    
     
     isHit(bacteriaPosition) {
         // console.log(`🔍 Checking collision: Bacteria at ${bacteriaPosition}, Alcohol at ${this.positions}`);

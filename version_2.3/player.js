@@ -24,4 +24,9 @@ class Player {
         let darkenFactor = (100 - this.health) / 100; // 0 at full health, 1 at 0 health
         this.color = lerpColor(this.baseColor, color(0, 0, 0), darkenFactor);
     }
+
+    move(direction) {
+        this.position = (this.position + direction + displaySize) % displaySize; // 🚨 Wrap around logic
+    }
+    
 }
