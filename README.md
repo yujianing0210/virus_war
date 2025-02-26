@@ -14,8 +14,9 @@ Feb 21
 
 Feb 22
 
-- version_2.1: debugging of version_2.0 (remove Websocket and Arduino input) xxx
+- version_2.1: debugging of version_2.0 (remove Websocket and Arduino input)
 
 Feb 25
 
-- version_2.2: copy from 2.1 --> random positions of the two players
+- version_2.2: update from 2.1 --> random positions of the two players + color adjustments
+- version_2.3: update from 2.2 --> change the 1D game interface from linear to circular

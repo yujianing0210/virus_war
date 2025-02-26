@@ -33,7 +33,7 @@ function setupGame() {
     alcohol = new Alcohol(); // Initialize Alcohol NPC
 
     // Bacteria setup: 游戏开始双方自动发射出一个细菌。细菌颜色和移动速度可调。
-    bacteriaOne = new Bacteria(playerOne.position, 1, color(255, 150, 150), 15);  // 1 - Light Red，speed = 15
+    bacteriaOne = new Bacteria(playerOne.position, 1, color(255, 150, 150), 10);  // 1 - Light Red，speed = 15
     bacteriaTwo = new Bacteria(playerTwo.position, -1, color(150, 150, 255), 15); // 2 - Light Blue, speed = 10
 
 }
