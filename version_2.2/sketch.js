@@ -23,23 +23,32 @@ function setupCanvas() {
 
 function setupGame() {
     // Player setup
-    // Player One's bacteria launch point (leftmost cell)
-    playerOne = new Player(0, color(255, 0, 0));  // 1 - Red 
-    //console.log("Player1 created");
-    // Player Two's bacteria launch point (rightmost cell)
-    playerTwo = new Player(displaySize - 1, color(0, 0, 255)); // 2 - Blue
+    // 🎲 Random positions with at least a 2-pixel interval between players
+  let playerOnePos = Math.floor(random(0, displaySize - 2));
+  let playerTwoPos;
+
+  do {
+      playerTwoPos = Math.floor(random(0, displaySize - 2));
+  } while (Math.abs(playerOnePos - playerTwoPos) < 2);  // Ensure 2-pixel separation
+
+  console.log(`🔴 Player One starts at position ${playerOnePos}`);
+  console.log(`🔵 Player Two starts at position ${playerTwoPos}`);
+
+  // Initialize players at random positions
+  playerOne = new Player(playerOnePos, color(129, 78, 237));
+  playerTwo = new Player(playerTwoPos, color(78, 148, 110));
 
     // NPC setup
     alcohol = new Alcohol(); // Initialize Alcohol NPC
 
     // Bacteria setup: 游戏开始双方自动发射出一个细菌。细菌颜色和移动速度可调。
-    bacteriaOne = new Bacteria(playerOne.position, 1, color(255, 150, 150), 15);  // 1 - Light Red，speed = 15
-    bacteriaTwo = new Bacteria(playerTwo.position, -1, color(150, 150, 255), 15); // 2 - Light Blue, speed = 10
+    bacteriaOne = new Bacteria(playerOne.position, 1, color(197, 171, 255), 15);  // 1 - 细菌1颜色，speed = 15
+    bacteriaTwo = new Bacteria(playerTwo.position, -1, color(0, 250, 154), 15); // 2 - 细菌2颜色, speed = 10
 
 }
 
 function draw() {
-    background(color(235,160,175));  // canvas background color
+    background(color(234,229,255));  // canvas background color
     display.show();   // 显示pixel line
 
     let xOffset = (width - (displaySize * pixelSize)) / 2; 
@@ -75,7 +84,7 @@ function keyPressed() {
         if (bacteriaOne) bacteriaOne.changeDirection(1);
     } else if (key === 'S' || key === 's') {
         console.log("🎯 Player1 shooting bacteria!");
-        let bacteriaColor = color(255, 150, 150);
+        let bacteriaColor = color(197, 171, 255); //Bacteria Color 1
         if (!bacteriaOne || !bacteriaOne.isAlive) {  // 🚨 Only create new bacteria if none exist
             bacteriaOne = new Bacteria(playerOne.position, 1, bacteriaColor, 15);
         }
@@ -89,7 +98,7 @@ function keyPressed() {
         if (bacteriaTwo) bacteriaTwo.changeDirection(1);
     } else if (key === 'K' || key === 'k') {
         console.log("🎯 Player2 shooting bacteria!");
-        let bacteriaColor = color(150, 150, 255);
+        let bacteriaColor = color(0, 250, 154); //Bacteria Color 2
         if (!bacteriaTwo || !bacteriaTwo.isAlive) {  // 🚨 Only create new bacteria if none exist
             bacteriaTwo = new Bacteria(playerTwo.position, -1, bacteriaColor, 10);
         }
@@ -102,10 +111,10 @@ function endGame() {
     
     if (playerOne.health <= 0) {
         winnerColor = playerTwo.baseColor; // Player Two wins, fill with blue
-        // winnerColor = color(0, 0, 255);
+        // winnerColor = color(129, 78, 237);
     } else if (playerTwo.health <= 0) {
         winnerColor = playerOne.baseColor; // Player One wins, fill with red
-        // winnerColor = color(255, 0, 0);
+        // winnerColor = color(78, 148, 110);
     } else {
         return; // If no one has lost, do nothing
     }

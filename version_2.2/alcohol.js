@@ -16,7 +16,7 @@ class Alcohol {
         }
     
         if (this.isVisible) {
-            fill(0, 255, 0); // Green color for alcohol NPC
+            fill(255, 248, 196); // Color for alcohol NPC
             for (let pos of this.positions) {
                 let pixelX = xOffset + (pos * pixelSize); // 🚨 Fix: Add xOffset to align correctly
                 rect(pixelX, this.yOffset, pixelSize, pixelSize);
