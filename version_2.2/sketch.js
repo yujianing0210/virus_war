@@ -8,6 +8,11 @@ let playerOne, playerTwo;
 let alcohol;
 let bacteriaOne, bacteriaTwo;
 
+function preload() {
+    // 📥 Load the background image before setup
+    bgImage = loadImage('assets/image.jpg'); // Ensure 'image.png' is in the project folder or correct path
+}
+
 function setup() {
     setupCanvas();
     setupGame();
@@ -48,8 +53,10 @@ function setupGame() {
 }
 
 function draw() {
-    background(color(234,229,255));  // canvas background color
-    display.show();   // 显示pixel line
+    // 🌄 Draw the background image instead of a solid color
+    background(bgImage); 
+
+    display.show();
 
     let xOffset = (width - (displaySize * pixelSize)) / 2; 
     let yOffset = height / 2 - pixelSize / 2;
