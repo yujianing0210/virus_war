@@ -19,4 +19,4 @@ Feb 22
 Feb 25
 
 - version_2.2: update from 2.1 --> random positions of the two players + color adjustments
-- version_2.3: update from 2.2 --> circular game interface, randomized alcohol behavior
+- version_2.3: update from 2.2 --> circular game interface + randomized alcohol behavior + dynamic speed
