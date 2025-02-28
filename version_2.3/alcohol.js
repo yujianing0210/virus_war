@@ -7,11 +7,29 @@ class Alcohol {
         this.positions = [center - 1, center]; // Use grid indices instead of pixel values
         this.isVisible = true;
         this.yOffset = height / 2 - pixelSize / 2;
+        this.randomizePositionAndLength();
+    }
+
+    randomizePositionAndLength() {
+        let maxLength = 5; // Can adjust max length as needed 
+        let length = Math.floor(random(1, maxLength + 1)); // Length between 1 and 5
+        let startPosition = Math.floor(random(0, displaySize - length));
+
+        this.positions = [];
+        for (let i = 0; i < length; i++) {
+            this.positions.push((startPosition + i) % displaySize); // Wrap if needed
+        }
+
+        console.log(`🍺 Alcohol NPC now spans ${this.positions.length} cells, starting at ${startPosition}`);
     }
 
     update(xOffset, yOffset, outerRadius) {
         if (frameCount % 120 === 0) {
             this.isVisible = !this.isVisible;
+
+            if (this.isVisible) {
+                this.randomizePositionAndLength(); // New position & length every time it appears
+            }
         }
     
         if (this.isVisible) {

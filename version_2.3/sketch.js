@@ -1,21 +1,30 @@
-// Game Logic:
-// Compared to version_2.0, we omit websocket and arduino, simply using keyboard to control the game (for easier debugging).
+// Game Logic
 
 let useKeyboard = true; // Use keyboard to control
+let hardwarePlayerOne = false;
+let hardwarePlayerTwo = false;
+
 let displaySize = 80;  // Number of pixels across the screen
 let pixelSize = 10;    // Size of each pixel
 let playerOne, playerTwo;
 let alcohol;
 let bacteriaOne, bacteriaTwo;
+let baseSpeed =30
+
+let socket;
 
 function preload() {
     // 📥 Load the background image before setup
-    bgImage = loadImage('assets/image.jpg'); // Ensure 'image.png' is in the project folder or correct path
+    bgImage = loadImage('assets/image.jpg'); 
 }
 
 function setup() {
     setupCanvas();
     setupGame();
+    socket = new WebSocket('ws://localhost:8080');
+    socket.onmessage = (event) => {
+        handleHardwareInput(event.data);
+    };
 }
 
 function setupCanvas() {
@@ -27,37 +36,52 @@ function setupCanvas() {
 }
 
 function setupGame() {
-    // Player setup
-    // 🎲 Random positions with at least a 10-pixel interval between players
-    let playerOnePos = Math.floor(random(0, displaySize - 1));
-    let playerTwoPos;
-
-    do {
-        playerTwoPos = Math.floor(random(0, displaySize - 1));
-    } while (Math.abs(playerOnePos - playerTwoPos) < 10);  // Ensure 2-pixel separation
-
+    
+    // Player One: Leftmost side (0 degrees) with slight random offset
+    let offsetOne = Math.floor(random(-4, 5)); // -2 to +2
+    let midPosition = Math.floor(displaySize / 2); 
+    let playerOnePos = (midPosition + offsetOne + displaySize) % displaySize;
+    playerOne = new Player(playerOnePos, color(129, 78, 237)); // Purple
     console.log(`🔴 Player One starts at position ${playerOnePos}`);
-    console.log(`🔵 Player Two starts at position ${playerTwoPos}`);
 
-    // Initialize players at random positions
-    playerOne = new Player(playerOnePos, color(129, 78, 237));
-    playerTwo = new Player(playerTwoPos, color(78, 148, 110));
+    // Player Two: Rightmost side (180 degrees) with slight random offset
+    let offsetTwo = Math.floor(random(-4, 5)); // -2 to +2
+    let playerTwoPos = (0 + offsetTwo + displaySize) % displaySize;
+    playerTwo = new Player(playerTwoPos, color(78, 148, 110)); // Green
+    console.log(`🔵 Player Two starts at position ${playerTwoPos}`);
 
     // NPC setup
     alcohol = new Alcohol(); // Initialize Alcohol NPC
 
     // Bacteria setup: 游戏开始双方自动发射出一个细菌。细菌颜色和移动速度可调。
-    bacteriaOne = new Bacteria(playerOne.position, 1, color(197, 171, 255), 15);  // 1 - 细菌1颜色，speed = 15
-    bacteriaTwo = new Bacteria(playerTwo.position, -1, color(0, 250, 154), 15); // 2 - 细菌2颜色, speed = 10
+    bacteriaOne = new Bacteria(playerOne.position, 1, color(197, 171, 255), baseSpeed, 'playerOne');
+    bacteriaTwo = new Bacteria(playerTwo.position, -1, color(0, 250, 154), baseSpeed, 'playerTwo');
 
 }
 
+function handleHardwareInput(command) {
+    if (command === 'noHardware1') {
+        hardwarePlayerOne = false;
+        console.log('Player One uses keyboard');
+    } else if (command === 'noHardware2') {
+        hardwarePlayerTwo = false;
+        console.log('Player Two uses keyboard');
+    } else {
+        if (command.startsWith('left') || command.startsWith('right') || command.startsWith('shoot')) {
+            hardwarePlayerOne = command.includes('1');
+            hardwarePlayerTwo = command.includes('2');
+            executeCommand(command);
+        }
+    }
+}
+
 function draw() {
+
     background(bgImage);
     display.show();
 
-    let xOffset = 0; //width / 2;
-    let yOffset = 0; // height / 2;
+    let xOffset = width / 2;
+    let yOffset = height / 2;
     let outerRadius = min(width, height) / 2.1; // Outer boundary
     let innerRadius = outerRadius / 1.09; // Inner boundary to create the ring
     let angleStep = TWO_PI / displaySize; // Divide ring into equal segments
@@ -75,6 +99,7 @@ function draw() {
             continue; // Skip other cells, as they are drawn in `display.show()`
         }
 
+        strokeWeight(1);
         stroke(0);
         beginShape();
         vertex(innerRadius * cos(startAngle) + xOffset, innerRadius * sin(startAngle) + yOffset);
@@ -87,46 +112,83 @@ function draw() {
     // 🚨 Ensure Alcohol NPC is Displayed at the Correct Position
     alcohol.update(xOffset, yOffset, outerRadius);
 
+    // 画细菌本体（单独画，不放到displayBuffer里）
+    if (bacteriaOne && bacteriaOne.isAlive) {
+        bacteriaOne.update();
+        drawBacteria(bacteriaOne.position, color(197, 171, 255));  // 实色紫色
+    }
+    if (bacteriaTwo && bacteriaTwo.isAlive) {
+        bacteriaTwo.update();
+        drawBacteria(bacteriaTwo.position, color(0, 250, 154));  // 实色绿色
+    }
+
+
     // Render bacteria if they exist
-    if (bacteriaOne && bacteriaOne.isAlive) bacteriaOne.update();
-    if (bacteriaTwo && bacteriaTwo.isAlive) bacteriaTwo.update();
+    if (bacteriaOne && bacteriaOne.isAlive) {
+        bacteriaOne.update();
+    }
+    if (bacteriaTwo && bacteriaTwo.isAlive) {
+        bacteriaTwo.update();
+    }
+    
+}
+
+function drawBacteria(position, col) {
+    // let angleStep = TWO_PI / displaySize;
+    let offsetAngle = 0; // 让0号格子从正上方开始
+
+    let startAngle = map(position, 0, displaySize, offsetAngle, offsetAngle + TWO_PI);
+    let endAngle = map(position + 1, 0, displaySize, offsetAngle, offsetAngle + TWO_PI);
+
+    let xOffset = width / 2;
+    let yOffset = height / 2;
+    let outerRadius = min(width, height) / 2.1;
+    let innerRadius = outerRadius / 1.09;
+
+    fill(col);  // 细菌本体颜色，和轨迹区分
+    stroke(0);  // 可以加边线增强对比
+    beginShape();
+    vertex(innerRadius * cos(startAngle) + xOffset, innerRadius * sin(startAngle) + yOffset);
+    vertex(outerRadius * cos(startAngle) + xOffset, outerRadius * sin(startAngle) + yOffset);
+    vertex(outerRadius * cos(endAngle) + xOffset, outerRadius * sin(endAngle) + yOffset);
+    vertex(innerRadius * cos(endAngle) + xOffset, innerRadius * sin(endAngle) + yOffset);
+    endShape(CLOSE);
 }
 
 
+
 function keyPressed() {
-    if (!useKeyboard) {
-        console.log("❌ Keyboard disabled (WebSocket is connected).");
-        return; // Only allow keyboard if WebSocket is disconnected
+    if (!hardwarePlayerOne) {
+        if (key === 'A') bacteriaOne.changeDirection(-1);
+        else if (key === 'D') bacteriaOne.changeDirection(1);
+        else if (key === 'S') spawnBacteriaOne();
     }
-
-    console.log(`🎮 Key Pressed: ${key}`);
-
-    if (key === 'A' || key === 'a') {
-        console.log("⬅️ Player1 moving left");
-        if (bacteriaOne) bacteriaOne.changeDirection(-1);
-    } else if (key === 'D' || key === 'd') {
-        console.log("➡️ Player1 moving right");
-        if (bacteriaOne) bacteriaOne.changeDirection(1);
-    } else if (key === 'S' || key === 's') {
-        console.log("🎯 Player1 shooting bacteria!");
-        let bacteriaColor = color(197, 171, 255); //Bacteria Color 1
-        if (!bacteriaOne || !bacteriaOne.isAlive) {  // 🚨 Only create new bacteria if none exist
-            bacteriaOne = new Bacteria(playerOne.position, 1, bacteriaColor, 15);
-        }
+    if (!hardwarePlayerTwo) {
+        if (key === 'J') bacteriaTwo.changeDirection(-1);
+        else if (key === 'L') bacteriaTwo.changeDirection(1);
+        else if (key === 'K') spawnBacteriaTwo();
     }
+}
 
-    if (key === 'J' || key === 'j') {
-        console.log("⬅️ Player2 moving left");
-        if (bacteriaTwo) bacteriaTwo.changeDirection(-1);
-    } else if (key === 'L' || key === 'l') {
-        console.log("➡️ Player2 moving right");
-        if (bacteriaTwo) bacteriaTwo.changeDirection(1);
-    } else if (key === 'K' || key === 'k') {
-        console.log("🎯 Player2 shooting bacteria!");
-        let bacteriaColor = color(0, 250, 154); //Bacteria Color 2
-        if (!bacteriaTwo || !bacteriaTwo.isAlive) {  // 🚨 Only create new bacteria if none exist
-            bacteriaTwo = new Bacteria(playerTwo.position, -1, bacteriaColor, 10);
-        }
+function executeCommand(command) {
+    if (command === 'left1') bacteriaOne.changeDirection(-1);
+    else if (command === 'right1') bacteriaOne.changeDirection(1);
+    else if (command === 'shoot1') spawnBacteriaOne();
+
+    if (command === 'left2') bacteriaTwo.changeDirection(-1);
+    else if (command === 'right2') bacteriaTwo.changeDirection(1);
+    else if (command === 'shoot2') spawnBacteriaTwo();
+}
+
+function spawnBacteriaOne() {
+    if (!bacteriaOne || !bacteriaOne.isAlive) {
+        bacteriaOne = new Bacteria(playerOne.position, 1, color(197, 171, 255), 15, 'playerOne');
+    }
+}
+
+function spawnBacteriaTwo() {
+    if (!bacteriaTwo || !bacteriaTwo.isAlive) {
+        bacteriaTwo = new Bacteria(playerTwo.position, -1, color(0, 250, 154), 15, 'playerTwo');
     }
 }
 
