@@ -23,4 +23,4 @@ Feb 25
 
 Mar 3
 
-- version_3.0: introduce sound detection sensor and tilt sensor for hardware interaction
+- version_3.0: introduce sound detection sensor and distance sensor for hardware interaction
