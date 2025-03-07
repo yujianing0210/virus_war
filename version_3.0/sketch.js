@@ -4,7 +4,7 @@ let useKeyboard = true; // Use keyboard to control
 let hardwarePlayerOne = false;
 let hardwarePlayerTwo = false;
 
-let displaySize = 80;  // Number of pixels across the screen
+let displaySize = 79;  // Number of pixels across the screen
 let pixelSize = 10;    // Size of each pixel
 let playerOne, playerTwo;
 let alcohol;
@@ -32,24 +32,21 @@ function setupCanvas() {
     canvasWidth = displaySize * pixelSize * 1.5; // 1200 pixels
     canvasHeight = canvasWidth * 0.6; // 720 pixels
     createCanvas(canvasWidth, canvasHeight);
-    let gif = createImg('assets/Test3.gif');
-    gif.position(0, 0);  // 绝对位置，铺满
-    gif.size(width, height);
     display = new Display(displaySize, pixelSize);
 }
 
 function setupGame() {
     
     // Player One: Leftmost side (0 degrees) with slight random offset
-    let offsetOne = Math.floor(random(-4, 5)); // -2 to +2
+    // let offsetOne = Math.floor(random(-4, 5)); // -2 to +2
     let midPosition = Math.floor(displaySize / 2); 
-    let playerOnePos = (midPosition + offsetOne + displaySize) % displaySize;
+    let playerOnePos = (midPosition + displaySize) % displaySize;
     playerOne = new Player(playerOnePos, color(129, 78, 237)); // Purple
     console.log(`🔴 Player One starts at position ${playerOnePos}`);
 
     // Player Two: Rightmost side (180 degrees) with slight random offset
-    let offsetTwo = Math.floor(random(-4, 5)); // -2 to +2
-    let playerTwoPos = (0 + offsetTwo + displaySize) % displaySize;
+    // let offsetTwo = Math.floor(random(-4, 5)); // -2 to +2
+    let playerTwoPos = (displaySize) % displaySize;
     playerTwo = new Player(playerTwoPos, color(78, 148, 110)); // Green
     console.log(`🔵 Player Two starts at position ${playerTwoPos}`);
 
@@ -80,7 +77,7 @@ function handleHardwareInput(command) {
 
 function draw() {
 
-    // background(bgImage);
+    background(bgImage);
     display.show();
 
     let xOffset = width / 2;
@@ -102,8 +99,8 @@ function draw() {
             continue; // Skip other cells, as they are drawn in `display.show()`
         }
 
-        strokeWeight(1);
-        stroke(0);
+        strokeWeight(2);
+        stroke(255);
         beginShape();
         vertex(innerRadius * cos(startAngle) + xOffset, innerRadius * sin(startAngle) + yOffset);
         vertex(outerRadius * cos(startAngle) + xOffset, outerRadius * sin(startAngle) + yOffset);
