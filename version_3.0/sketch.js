@@ -31,7 +31,8 @@ function setupCanvas() {
     // 设定画布的大小尺寸和比例
     canvasWidth = displaySize * pixelSize * 1.5; // 1200 pixels
     canvasHeight = canvasWidth * 0.6; // 720 pixels
-    createCanvas(canvasWidth, canvasHeight);
+    createCanvas(windowWidth, windowHeight);
+   // createCanvas(canvasWidth, canvasHeight);
     display = new Display(displaySize, pixelSize);
 }
 
