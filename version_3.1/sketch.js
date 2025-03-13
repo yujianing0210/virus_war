@@ -36,7 +36,9 @@ function setupCanvas() {
     let cnv = createCanvas(windowWidth, windowHeight);
     cnv.style("pointer-events", "none"); // ✅ 让鼠标事件穿透 canvas
     clear();  // ✅ 让 canvas 透明
-    display = new Display(displaySize, pixelSize);
+    // display = new Display(displaySize, pixelSize);
+    display = new Display(80 /* or 79 */, 8 /* block size you want */);
+
 }
 
 function setupGame() {
@@ -80,64 +82,47 @@ function handleHardwareInput(command) {
 }
 
 function draw() {
-
-    clear(); 
-    // background(bgImage);
+    clear();
     display.show();
 
     let xOffset = width / 2;
     let yOffset = height / 2;
-    let outerRadius = min(width, height) / 2.1; // Outer boundary
-    let innerRadius = outerRadius / 1.09; // Inner boundary to create the ring
-    let angleStep = TWO_PI / displaySize; // Divide ring into equal segments
+    let outerRadius = min(width, height) / 2.1;
+    let cellSize = 50; // Each pixel-sized block
 
-    // 🚨 Ensure Players Are Rendered as Grid Cells Instead of Ellipses
-    for (let i = 0; i < displaySize; i++) {
-        let startAngle = i * angleStep;
-        let endAngle = (i + 1) * angleStep;
+    // Render Players as Pixel Blocks
+    drawPixelCell(playerOne.position, playerOne.color, xOffset, yOffset, outerRadius, cellSize);
+    drawPixelCell(playerTwo.position, playerTwo.color, xOffset, yOffset, outerRadius, cellSize);
 
-        if (i === playerOne.position) {
-            fill(playerOne.color);
-        } else if (i === playerTwo.position) {
-            fill(playerTwo.color);
-        } else {
-            continue; // Skip other cells, as they are drawn in `display.show()`
-        }
-
-        strokeWeight(2);
-        stroke(255);
-        beginShape();
-        vertex(innerRadius * cos(startAngle) + xOffset, innerRadius * sin(startAngle) + yOffset);
-        vertex(outerRadius * cos(startAngle) + xOffset, outerRadius * sin(startAngle) + yOffset);
-        vertex(outerRadius * cos(endAngle) + xOffset, outerRadius * sin(endAngle) + yOffset);
-        vertex(innerRadius * cos(endAngle) + xOffset, innerRadius * sin(endAngle) + yOffset);
-        endShape(CLOSE);
-    }
-
-    // 🚨 Ensure Alcohol NPC is Displayed at the Correct Position
+    // Render Alcohol NPC
     alcohol.update(xOffset, yOffset, outerRadius);
 
-    // 画细菌本体（单独画，不放到displayBuffer里）
+    // Render Bacteria
     if (bacteriaOne && bacteriaOne.isAlive) {
         bacteriaOne.update();
-        drawBacteria(bacteriaOne.position, color(197, 171, 255));  // 实色紫色
+        drawPixelCell(bacteriaOne.position, color(197, 171, 255), xOffset, yOffset, outerRadius, cellSize);
     }
     if (bacteriaTwo && bacteriaTwo.isAlive) {
         bacteriaTwo.update();
-        drawBacteria(bacteriaTwo.position, color(0, 250, 154));  // 实色绿色
+        drawPixelCell(bacteriaTwo.position, color(0, 250, 154), xOffset, yOffset, outerRadius, cellSize);
     }
-
-
-    // Render bacteria if they exist
-    if (bacteriaOne && bacteriaOne.isAlive) {
-        bacteriaOne.update();
-    }
-    if (bacteriaTwo && bacteriaTwo.isAlive) {
-        bacteriaTwo.update();
-    }
-    
 }
 
+function drawPixelCell(position, col, xOffset, yOffset, outerRadius, cellSize) {
+    let angleStep = TWO_PI / displaySize;
+    let angle = position * angleStep;
+
+    let x = cos(angle) * outerRadius;
+    let y = sin(angle) * outerRadius;
+
+    // Snap to grid
+    let gridX = round(x / cellSize) * cellSize;
+    let gridY = round(y / cellSize) * cellSize;
+
+    fill(col);
+    stroke(0);
+    rect(gridX + xOffset, gridY + yOffset, cellSize, cellSize);
+}
 
 function drawBacteria(position, col) {
     // let angleStep = TWO_PI / displaySize;
