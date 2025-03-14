@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Midpoint Circle (Bresenham) Demo</title>
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.4.0/lib/p5.min.js"></script>
+</head>
+<body>
+<script>
+/********************************************************
+ * Midpoint (Bresenham) Circle => One Perfect Pixel Ring
+ * 
+ * Steps:
+ *   1) We define N=50 => a 50×50 grid
+ *   2) We run midpointCircle() => get ring cell list
+ *   3) We sort them by angle => mainRing
+ *   4) We slice mainRing => M segments
+ *   5) We display => 1D ring logic w/ red/blue spots
+ *   6) No BFS needed => It's guaranteed connected
+ ********************************************************/
+
+let N = 30;           // N×N grid
+let tileSize = 20;    // each cell is 12×12 px
+let ringPoints = [];  // final ring (pixel) coords
+let M = 80;           // # of ring spots
+let spots = [];
+
+let playerSpot = 0;   
+let otherSpot  = 8;  
+
+function setup() {
+  createCanvas(N*tileSize, N*tileSize);
+  noSmooth();
+
+  // 1) we do a classic midpoint circle around center
+  let cx = (N-1)/2;
+  let cy = (N-1)/2;
+  let r  = floor((N-1)/2);
+
+  ringPoints = midpointCircle(cx, cy, r);
+  
+  // 2) sort ringPoints by angle
+  ringPoints.sort((a,b) => {
+    let angA = atan2(a.y - cy, a.x - cx);
+    let angB = atan2(b.y - cy, b.x - cx);
+    return angA - angB;
+  });
+
+  // 3) slice into M spots
+  spots = sliceIntoSpots(ringPoints, M);
+}
+
+function draw() {
+  background(220);
+
+  // A) draw entire ring in gray
+  fill(120);
+  noStroke();
+  for (let pt of ringPoints) {
+    rect(pt.x*tileSize, pt.y*tileSize, tileSize, tileSize);
+  }
+
+  // B) highlight the 2 players
+  drawSpot(spots[playerSpot], color(255,0,0));
+  drawSpot(spots[otherSpot], color(0,0,255));
+}
+
+// Move players => keys
+function keyPressed() {
+  if (key==='D') playerSpot=(playerSpot+1)%M;
+  else if (key==='A') playerSpot=(playerSpot-1+M)%M;
+  
+  if (key==='L') otherSpot=(otherSpot+1)%M;
+  else if (key==='J') otherSpot=(otherSpot-1+M)%M;
+}
+
+/********************************************************
+ * midpointCircle(cx,cy,r):
+ *   enumerates ring pixels w/ the midpoint circle algorithm
+ *   guaranteeing a perfect single-pixel ring
+ ********************************************************/
+function midpointCircle(cx, cy, r) {
+  let points = [];
+
+  // We'll store all octants simultaneously
+  let x = 0;
+  let y = r;
+  let d = 1 - r;
+
+  pointsInAllOctants(cx, cy, x, y, points);
+
+  while (x < y) {
+    if (d < 0) {
+      d += 2*x + 3;
+    } else {
+      d += 2*(x - y) + 5;
+      y--;
+    }
+    x++;
+    pointsInAllOctants(cx, cy, x, y, points);
+  }
+
+  return points;
+}
+
+/********************************************************
+ * pointsInAllOctants(cx, cy, x, y, arr):
+ *   for midpoint circle => reflect (x,y) into 8 symmetrical octants
+ ********************************************************/
+function pointsInAllOctants(cx, cy, x, y, arr) {
+  arr.push({x: cx + x, y: cy + y});
+  arr.push({x: cx - x, y: cy + y});
+  arr.push({x: cx + x, y: cy - y});
+  arr.push({x: cx - x, y: cy - y});
+  arr.push({x: cx + y, y: cy + x});
+  arr.push({x: cx - y, y: cy + x});
+  arr.push({x: cx + y, y: cy - x});
+  arr.push({x: cx - y, y: cy - x});
+}
+
+/********************************************************
+ * slice ring => M spots
+ ********************************************************/
+function sliceIntoSpots(ring, M) {
+  let total = ring.length;
+  let chunk = floor(total / M);
+  let arr = [];
+  let start=0;
+  for (let i=0; i<M; i++){
+    let end=(i<M-1)? start+chunk : total;
+    arr.push(ring.slice(start,end));
+    start = end;
+  }
+  return arr;
+}
+
+/********************************************************
+ * drawSpot(spot, col):
+ ********************************************************/
+function drawSpot(spot, col) {
+  fill(col);
+  noStroke();
+  for (let pt of spot) {
+    rect(pt.x*tileSize, pt.y*tileSize, tileSize, tileSize);
+  }
+}
+
+</script>
+</body>
+</html>

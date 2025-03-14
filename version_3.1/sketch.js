@@ -1,70 +1,104 @@
-// Game Logic
+// sketch.js
 
-let useKeyboard = true; // Use keyboard to control
+let useKeyboard = true;
 let hardwarePlayerOne = false;
 let hardwarePlayerTwo = false;
 
-let displaySize = 79;  // Number of pixels across the screen
-let pixelSize = 10;    // Size of each pixel
 let playerOne, playerTwo;
 let alcohol;
 let bacteriaOne, bacteriaTwo;
-let baseSpeed =30
 
-let socket;
+let xOffset = 560;
+let yOffset = 90;
+
+let baseSpeed=10;
+
+// Instead of displaySize, we define ringSize via display.ringSize
+// We'll keep the same variable for convenience:
+let displaySize = 0;  
 
 function preload() {
-    // 📥 Load the background image before setup
-    bgImage = loadImage('assets/scene3.gif'); 
+  bgImage = loadImage('assets/scene4.gif'); 
 }
 
 function setup() {
-    setupCanvas();
-    setupGame();
-    socket = new WebSocket('ws://localhost:8080');
-    socket.onmessage = (event) => {
-        handleHardwareInput(event.data);
-    };
-}
+  let cnv = createCanvas(windowWidth, windowHeight);
+  cnv.style("pointer-events","none");
+  clear();
 
-function setupCanvas() {
-    // 设定画布的大小尺寸和比例
-    // canvasWidth = displaySize * pixelSize * 1.5; // 1200 pixels
-    // canvasHeight = canvasWidth * 0.6; // 720 pixels
-    // createCanvas(windowWidth, windowHeight);
-    // createCanvas(canvasWidth, canvasHeight);
-    let cnv = createCanvas(windowWidth, windowHeight);
-    cnv.style("pointer-events", "none"); // ✅ 让鼠标事件穿透 canvas
-    clear();  // ✅ 让 canvas 透明
-    // display = new Display(displaySize, pixelSize);
-    display = new Display(80 /* or 79 */, 8 /* block size you want */);
+  // 1) init the display with midpoint circle
+  display = new Display();
+  // Let's pick N=80 => an 80x80 circle
+  display.initMidCircleRing(38);  
 
+  // Now "displaySize" is display.ringSize
+  displaySize = display.ringSize;
+
+  setupGame();
+
+  // WebSocket
+  socket = new WebSocket('ws://localhost:8080');
+  socket.onmessage = (e)=> handleHardwareInput(e.data);
 }
 
 function setupGame() {
-    
-    // Player One: Leftmost side (0 degrees) with slight random offset
-    // let offsetOne = Math.floor(random(-4, 5)); // -2 to +2
-    let midPosition = Math.floor(displaySize / 2); 
-    let playerOnePos = (midPosition + displaySize) % displaySize;
-    playerOne = new Player(playerOnePos, color(129, 78, 237)); // Purple
-    console.log(`🔴 Player One starts at position ${playerOnePos}`);
+  // We'll place playerOne at ring index 0, playerTwo at ringSize/2
+  playerOne = new Player(0, color(129,78,237));
+  let half = floor(displaySize/2);
+  playerTwo = new Player(half, color(78,148,110));
 
-    // Player Two: Rightmost side (180 degrees) with slight random offset
-    // let offsetTwo = Math.floor(random(-4, 5)); // -2 to +2
-    let playerTwoPos = (displaySize) % displaySize;
-    playerTwo = new Player(playerTwoPos, color(78, 148, 110)); // Green
-    console.log(`🔵 Player Two starts at position ${playerTwoPos}`);
+  // init Alcohol 
+  alcohol = new Alcohol();
 
-    // NPC setup
-    alcohol = new Alcohol(); // Initialize Alcohol NPC
-
-    // Bacteria setup: 游戏开始双方自动发射出一个细菌。细菌颜色和移动速度可调。
-    bacteriaOne = new Bacteria(playerOne.position, 1, color(197, 171, 255), baseSpeed, 'playerOne');
-    bacteriaTwo = new Bacteria(playerTwo.position, -1, color(0, 250, 154), baseSpeed, 'playerTwo');
-
+  // init Bacteria 
+  bacteriaOne = new Bacteria(playerOne.position, 1, color(197,171,255), baseSpeed, 'playerOne');
+  bacteriaTwo = new Bacteria(playerTwo.position, -1,color(0,250,154), baseSpeed,'playerTwo');
 }
 
+function draw() {
+  clear();
+  display.show();
+
+  // Now we must draw the players & alcohol & bacteria in the pixel ring coordinates
+  drawAlcohol();
+  drawPlayer(playerOne);
+  drawPlayer(playerTwo);
+  if(bacteriaOne && bacteriaOne.isAlive) bacteriaOne.update();
+  if(bacteriaTwo && bacteriaTwo.isAlive) bacteriaTwo.update();
+  if(bacteriaOne && bacteriaOne.isAlive) drawBacteria(bacteriaOne);
+  if(bacteriaTwo && bacteriaTwo.isAlive) drawBacteria(bacteriaTwo);
+}
+
+function drawAlcohol() {
+  // We store positions in ring indexes
+  // So let's do the same strategy as "random(0, ringSize)"
+  // If you want multi-spot alcohol, do that in the constructor
+  // Then to draw it:
+
+  if(!alcohol.isVisible)return;
+  fill(255,245,0);
+  noStroke();
+  for(let idx of alcohol.positions) {
+    let cell = display.ringMap.get(idx);
+    rect(cell.x*display.tileSize + xOffset, cell.y*display.tileSize + yOffset, display.tileSize, display.tileSize);
+  }
+}
+
+function drawPlayer(p) {
+  fill(p.color);
+  noStroke();
+  let cell = display.ringMap.get(p.position);
+  rect(cell.x*display.tileSize + xOffset, cell.y*display.tileSize + yOffset, display.tileSize, display.tileSize);
+}
+
+function drawBacteria(b) {
+  fill(b.color);
+  noStroke();
+  let cell = display.ringMap.get(b.position);
+  rect(cell.x*display.tileSize + xOffset, cell.y*display.tileSize + yOffset, display.tileSize, display.tileSize);
+}
+
+// handle hardware 
 function handleHardwareInput(command) {
     if (command === 'noHardware1') {
         hardwarePlayerOne = false;
@@ -81,86 +115,6 @@ function handleHardwareInput(command) {
     }
 }
 
-function draw() {
-    clear();
-    display.show();
-
-    let xOffset = width / 2;
-    let yOffset = height / 2;
-    let outerRadius = min(width, height) / 2.1;
-    let cellSize = 50; // Each pixel-sized block
-
-    // Render Players as Pixel Blocks
-    drawPixelCell(playerOne.position, playerOne.color, xOffset, yOffset, outerRadius, cellSize);
-    drawPixelCell(playerTwo.position, playerTwo.color, xOffset, yOffset, outerRadius, cellSize);
-
-    // Render Alcohol NPC
-    alcohol.update(xOffset, yOffset, outerRadius);
-
-    // Render Bacteria
-    if (bacteriaOne && bacteriaOne.isAlive) {
-        bacteriaOne.update();
-        drawPixelCell(bacteriaOne.position, color(197, 171, 255), xOffset, yOffset, outerRadius, cellSize);
-    }
-    if (bacteriaTwo && bacteriaTwo.isAlive) {
-        bacteriaTwo.update();
-        drawPixelCell(bacteriaTwo.position, color(0, 250, 154), xOffset, yOffset, outerRadius, cellSize);
-    }
-}
-
-function drawPixelCell(position, col, xOffset, yOffset, outerRadius, cellSize) {
-    let angleStep = TWO_PI / displaySize;
-    let angle = position * angleStep;
-
-    let x = cos(angle) * outerRadius;
-    let y = sin(angle) * outerRadius;
-
-    // Snap to grid
-    let gridX = round(x / cellSize) * cellSize;
-    let gridY = round(y / cellSize) * cellSize;
-
-    fill(col);
-    stroke(0);
-    rect(gridX + xOffset, gridY + yOffset, cellSize, cellSize);
-}
-
-function drawBacteria(position, col) {
-    // let angleStep = TWO_PI / displaySize;
-    let offsetAngle = 0; // 让0号格子从正上方开始
-
-    let startAngle = map(position, 0, displaySize, offsetAngle, offsetAngle + TWO_PI);
-    let endAngle = map(position + 1, 0, displaySize, offsetAngle, offsetAngle + TWO_PI);
-
-    let xOffset = width / 2;
-    let yOffset = height / 2;
-    let outerRadius = min(width, height) / 2.1;
-    let innerRadius = outerRadius / 1.09;
-
-    fill(col);  // 细菌本体颜色，和轨迹区分
-    stroke(0);  // 可以加边线增强对比
-    beginShape();
-    vertex(innerRadius * cos(startAngle) + xOffset, innerRadius * sin(startAngle) + yOffset);
-    vertex(outerRadius * cos(startAngle) + xOffset, outerRadius * sin(startAngle) + yOffset);
-    vertex(outerRadius * cos(endAngle) + xOffset, outerRadius * sin(endAngle) + yOffset);
-    vertex(innerRadius * cos(endAngle) + xOffset, innerRadius * sin(endAngle) + yOffset);
-    endShape(CLOSE);
-}
-
-
-
-function keyPressed() {
-    if (!hardwarePlayerOne) {
-        if (key === 'A') bacteriaOne.changeDirection(-1);
-        else if (key === 'D') bacteriaOne.changeDirection(1);
-        else if (key === 'S') spawnBacteriaOne();
-    }
-    if (!hardwarePlayerTwo) {
-        if (key === 'J') bacteriaTwo.changeDirection(-1);
-        else if (key === 'L') bacteriaTwo.changeDirection(1);
-        else if (key === 'K') spawnBacteriaTwo();
-    }
-}
-
 function executeCommand(command) {
     if (command === 'left1') bacteriaOne.changeDirection(-1);
     else if (command === 'right1') bacteriaOne.changeDirection(1);
@@ -171,19 +125,21 @@ function executeCommand(command) {
     else if (command === 'shoot2') spawnBacteriaTwo();
 }
 
-function spawnBacteriaOne() {
-    if (!bacteriaOne || !bacteriaOne.isAlive) {
-        bacteriaOne = new Bacteria(playerOne.position, 1, color(197, 171, 255), 15, 'playerOne');
-    }
+function keyPressed() {
+  // same logic as your existing code
+  if(!hardwarePlayerOne){
+    if(key==='A') bacteriaOne.changeDirection(-1);
+    else if(key==='D') bacteriaOne.changeDirection(1);
+    else if(key==='S') spawnBacteriaOne();
+  }
+  if(!hardwarePlayerTwo){
+    if(key==='J') bacteriaTwo.changeDirection(-1);
+    else if(key==='L') bacteriaTwo.changeDirection(1);
+    else if(key==='K') spawnBacteriaTwo();
+  }
 }
 
-function spawnBacteriaTwo() {
-    if (!bacteriaTwo || !bacteriaTwo.isAlive) {
-        bacteriaTwo = new Bacteria(playerTwo.position, -1, color(0, 250, 154), 15, 'playerTwo');
-    }
-}
-
-// 处理游戏结束逻辑
+// create new Bacteria
 function endGame() {
     let winnerColor;
     

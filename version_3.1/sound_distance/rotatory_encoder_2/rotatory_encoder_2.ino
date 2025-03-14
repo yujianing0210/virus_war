@@ -1,36 +1,62 @@
-#define CLK 2  // Rotary Encoder Clock Pin
-#define DT 3   // Rotary Encoder Data Pin
-#define SW 4   // Rotary Encoder Button Pin
+// 传感器引脚定义
+const int trigPinLeft = 8;
+const int echoPinLeft = 9;
+const int trigPinRight = 6;
+const int echoPinRight = 7;
+const int soundSensorPin = A0;
 
-int lastCLK = HIGH; 
-int lastButtonState = HIGH;
+// 阈值设置
+const int coughThreshold = 50;  // 咳嗽音量
+const int handDistanceThreshold = 10;  // 小于15cm认为手在遮挡
+
+// 防抖定时
+unsigned long lastCoughTime = 0;
+const unsigned long coughCooldown = 500;  // 防连发
 
 void setup() {
     Serial.begin(9600);
-    pinMode(CLK, INPUT_PULLUP);
-    pinMode(DT, INPUT_PULLUP);
-    pinMode(SW, INPUT_PULLUP);
+    
+    pinMode(trigPinLeft, OUTPUT);
+    pinMode(echoPinLeft, INPUT);
+    
+    pinMode(trigPinRight, OUTPUT);
+    pinMode(echoPinRight, INPUT);
+    
+    pinMode(soundSensorPin, INPUT);
 }
 
 void loop() {
-    int currentCLK = digitalRead(CLK);
-    int currentDT = digitalRead(DT);
-    int currentButton = digitalRead(SW);
+    // 读取距离和声音
+    int leftDistance = getDistance(trigPinLeft, echoPinLeft);
+    int rightDistance = getDistance(trigPinRight, echoPinRight);
+    int soundLevel = analogRead(soundSensorPin);
 
-    // Detect direction change
-    if (currentCLK != lastCLK) {
-        if (currentDT != currentCLK) {
-            Serial.println("right2");  // Change bacteria direction to right
-        } else {
-            Serial.println("left2");   // Change bacteria direction to left
-        }
+    // 判断手势方向
+    if (leftDistance < handDistanceThreshold) {
+        Serial.println("left2");
+    } else if (rightDistance < handDistanceThreshold) {
+        Serial.println("right2");
     }
-    lastCLK = currentCLK;
 
-    // Detect button press (shoot bacteria)
-    if (currentButton == LOW && lastButtonState == HIGH) {  
-        Serial.println("shoot2");  
-        delay(500);  // Prevent accidental double presses
+    // 判断咳嗽发射
+    if (soundLevel > coughThreshold && millis() - lastCoughTime > coughCooldown) {
+        Serial.println("shoot2");
+        lastCoughTime = millis();
     }
-    lastButtonState = currentButton;
+
+    delay(50);  // 避免读取过于频繁
+}
+
+// 超声波测距函数
+int getDistance(int trigPin, int echoPin) {
+    digitalWrite(trigPin, LOW);
+    delayMicroseconds(2);
+    digitalWrite(trigPin, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trigPin, LOW);
+
+    long duration = pulseIn(echoPin, HIGH);
+    int distance = duration * 0.034 / 2;  // 距离=时间*声速/2
+
+    return distance;
 }
