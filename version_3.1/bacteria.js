@@ -66,10 +66,22 @@ class Bacteria {
       this.direction=d;
       console.log(`${this.owner} bacteria dir=${d}`);
     }
-    die(){
-      console.log(`💀 Bacteria ${this.owner} died`);
+    die() {
+      console.log(`💀 Bacteria ${this.owner} died.`);
+      
+      // Clear its trail
       display.clearTrail(this.owner);
-      this.isAlive=false;
+      
+      // Mark this bacterium as dead
+      this.isAlive = false;
+      
+      // Also reset the global reference so the game logic can spawn another
+      if (this.owner === 'playerOne') {
+        bacteriaOne = null;
+      } else {
+        bacteriaTwo = null;
+      }
     }
+    
   }
   

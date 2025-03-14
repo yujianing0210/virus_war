@@ -7,7 +7,7 @@ let hardwarePlayerTwo = false;
 let displaySize = 79;  // Number of pixels across the screen
 let pixelSize = 10;    // Size of each pixel
 let playerOne, playerTwo;
-let alcohol;
+let alcohol; 
 let bacteriaOne, bacteriaTwo;
 let baseSpeed =30
 

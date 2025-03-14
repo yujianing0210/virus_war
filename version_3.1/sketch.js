@@ -8,10 +8,12 @@ let playerOne, playerTwo;
 let alcohol;
 let bacteriaOne, bacteriaTwo;
 
-let xOffset = 560;
-let yOffset = 90;
+let xOffset = 547; //560
+let yOffset = 155; //90
 
 let baseSpeed=10;
+
+let N = 35;
 
 // Instead of displaySize, we define ringSize via display.ringSize
 // We'll keep the same variable for convenience:
@@ -29,7 +31,7 @@ function setup() {
   // 1) init the display with midpoint circle
   display = new Display();
   // Let's pick N=80 => an 80x80 circle
-  display.initMidCircleRing(38);  
+  display.initMidCircleRing(N);  
 
   // Now "displaySize" is display.ringSize
   displaySize = display.ringSize;
@@ -70,19 +72,16 @@ function draw() {
 }
 
 function drawAlcohol() {
-  // We store positions in ring indexes
-  // So let's do the same strategy as "random(0, ringSize)"
-  // If you want multi-spot alcohol, do that in the constructor
-  // Then to draw it:
-
-  if(!alcohol.isVisible)return;
-  fill(255,245,0);
-  noStroke();
-  for(let idx of alcohol.positions) {
-    let cell = display.ringMap.get(idx);
-    rect(cell.x*display.tileSize + xOffset, cell.y*display.tileSize + yOffset, display.tileSize, display.tileSize);
+    alcohol.update();  // This toggles isVisible, positions, etc.
+    if(!alcohol.isVisible) return;
+    fill(252,252,3);
+    noStroke();
+    for(let idx of alcohol.positions) {
+      let c = display.ringMap.get(idx);
+      rect(c.x*display.tileSize + xOffset, c.y*display.tileSize + yOffset, display.tileSize, display.tileSize);
+    }
   }
-}
+  
 
 function drawPlayer(p) {
   fill(p.color);
@@ -125,7 +124,7 @@ function executeCommand(command) {
     else if (command === 'shoot2') spawnBacteriaTwo();
 }
 
-function keyPressed() {
+function keyPressed(){
   // same logic as your existing code
   if(!hardwarePlayerOne){
     if(key==='A') bacteriaOne.changeDirection(-1);
@@ -139,41 +138,56 @@ function keyPressed() {
   }
 }
 
-// create new Bacteria
-function endGame() {
-    let winnerColor;
-    
-    if (playerOne.health <= 0) {
-        winnerColor = playerTwo.baseColor; // Player Two wins, fill with blue
-        // winnerColor = color(129, 78, 237);
-    } else if (playerTwo.health <= 0) {
-        winnerColor = playerOne.baseColor; // Player One wins, fill with red
-        // winnerColor = color(78, 148, 110);
-    } else {
-        return; // If no one has lost, do nothing
+function spawnBacteriaOne() {
+    // Only spawn if no existing living bacterium
+    if (!bacteriaOne || !bacteriaOne.isAlive) {
+      bacteriaOne = new Bacteria(
+        playerOne.position, 
+        1, 
+        color(197, 171, 255), 
+        15, 
+        'playerOne'
+      );
     }
+  }
+  
+  function spawnBacteriaTwo() {
+    if (!bacteriaTwo || !bacteriaTwo.isAlive) {
+      bacteriaTwo = new Bacteria(
+        playerTwo.position, 
+        -1, 
+        color(0, 250, 154), 
+        15, 
+        'playerTwo'
+      );
+    }
+  }
+  
 
-    console.log(`🏆 Game Over! Winner's color fills the grid.`);
-
-    // 🚨 Fill the entire pixel line with the winner's original color
+  function endGame() {
+    let winnerColor;
+  
+    if (playerOne.health <= 0) {
+      winnerColor = playerTwo.baseColor;
+    } else if (playerTwo.health <= 0) {
+      winnerColor = playerOne.baseColor;
+    } else {
+      return; 
+    }
+  
+    console.log("🏆 Game Over! Fill ring with color.");
+  
     display.setAllPixels(winnerColor);
-
-    // 🚨 Explicitly clear the last bacteria and losing player position
-    display.setPixel(playerOne.position, winnerColor);
-    display.setPixel(playerTwo.position, winnerColor);
-
-    // 🚨 Explicitly remove any bacteria from memory
+  
+    // set last bacteria references to null
     bacteriaOne = null;
     bacteriaTwo = null;
-
-    // 🚨 Ensure the display updates by calling display.show() before stopping the loop
+  
     redraw();
     display.show();
-
-    // 🚨 Delay stopping the loop slightly to allow final rendering
+  
     setTimeout(() => {
-        noLoop(); // Stop the game loop AFTER colors have updated
-    }, 100); // Small delay (100ms) to allow rendering
-}
-
-
+      noLoop();
+    }, 100);
+  }
+  

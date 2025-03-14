@@ -1,37 +1,25 @@
 // display.js
-// Replaces the old angle-based ring with a pixel-based ring using Midpoint Circle.
-//
-// Key new data:
-//   this.ringCells = array of {x,y} for each pixel in the ring
-//   this.ringSize  = number of pixel-cells in the ring
-//   this.ringMap   = (x,y)->index and index->(x,y)
-//   We'll keep the same "trailOwner" and "trailLevel" arrays sized ringSize.
-//
-// The show() function draws the entire ring in a pixel-grid style.
 
 class Display {
     constructor() {
-      // We no longer store _displaySize or _pixelSize at constructor time.
-      // We'll do it after we generate the circle.
+      this.ringCells = [];  
+      this.ringSize  = 0;    
+      this.ringMap   = new Map();
+      this.trailOwner= [];   
+      this.trailLevel= [];   
+      this.initColor = color(0);
+      this.tileSize  = 20;
   
-      this.ringCells = [];   // array of {x,y} from midpoint circle
-      this.ringSize  = 0;    // how many ring pixels
-      this.ringMap   = new Map(); // index-> cell, cell->index
-      this.trailOwner= [];   // 'playerOne', 'playerTwo', or null
-      this.trailLevel= [];   // integer 0..4
-      this.initColor = color(0); // background color for ring
-      this.tileSize  = 20;   // each ring cell displayed as 10×10 px
+      // We'll store a special "winnerColor" used when the entire ring is "WINNER".
+      this.winnerColor = null; 
     }
   
-    // Midpoint circle approach
     initMidCircleRing(N) {
-      // 1) generate ring via midpoint circle
       let cx = (N-1)/2;
       let cy = (N-1)/2;
       let r  = floor((N-1)/2);
   
       let rawRing = midpointCircle(cx, cy, r);
-      // remove duplicates, etc. Then sort by angle
       rawRing = uniquePoints(rawRing);
   
       rawRing.sort((a,b)=>{
@@ -42,43 +30,40 @@ class Display {
       this.ringCells = rawRing;
       this.ringSize  = rawRing.length;
   
-      // build ringMap and trail arrays
       this.ringMap.clear();
       for(let i=0; i<this.ringSize; i++){
         let c = this.ringCells[i];
-        // index -> cell
         this.ringMap.set(i, c);
-        // cell -> index
         this.ringMap.set(c.x+','+c.y, i);
       }
   
-      // init trailOwner, trailLevel
       this.trailOwner = Array(this.ringSize).fill(null);
       this.trailLevel = Array(this.ringSize).fill(0);
+      this.winnerColor = null; // no winner yet
     }
   
-    // "setPixel" => color that ring index
     setPixel(index, c) {
       if(index<0||index>=this.ringSize)return;
-      // direct color assignment
-      // We'll store this in a separate array if needed
-      // but for now, let's just do setAllPixels?
+      // not used in the new approach
     }
   
+    // 🚨 Instead of clearing everything to black, let's forcibly mark ring as "WINNER"
     setAllPixels(col) {
+      this.winnerColor = col;        // store the color
       for(let i=0;i<this.ringSize;i++){
-        this.trailOwner[i]= null;
-        this.trailLevel[i]= 0;
-      }
-      for(let i=0;i<this.ringSize;i++){
-        // we won't store actual color array,
-        // let's just do it in show() or recordTrail?
+        this.trailOwner[i] = 'WINNER'; // special label
+        this.trailLevel[i] = 4;        // max infection
       }
     }
   
-    // same logic as before, but index is ring index
     recordTrail(ringIndex, owner) {
       if (alcohol.isHit(ringIndex)) return;
+      
+      // If the ring is forcibly "WINNER," do we still let infection happen?
+      // Usually no, so skip if it's "WINNER"
+      if (this.trailOwner[ringIndex]==='WINNER') {
+        return;
+      }
   
       let oldOwner = this.trailOwner[ringIndex];
       if (oldOwner===owner) {
@@ -87,17 +72,12 @@ class Display {
         this.trailOwner[ringIndex] = owner;
         this.trailLevel[ringIndex] = 1;
       } else {
-        // competing infection
         this.trailLevel[ringIndex]--;
         if (this.trailLevel[ringIndex]<=0) {
           this.trailOwner[ringIndex] = owner;
           this.trailLevel[ringIndex] = 1;
         }
       }
-    }
-  
-    updateTrailColor(index) {
-      // no direct storage, we compute color on the fly in show()
     }
   
     getTrailOwner(index) {
@@ -118,34 +98,38 @@ class Display {
   
     show() {
       push();
-      // let xOffset = width / 4;
-      // draw entire ring on a pixel grid
-      // each ring cell => draw a small square
       noStroke();
+  
       for(let i=0; i<this.ringSize;i++){
-        let c = this.ringCells[i]; // {x,y} in NxN
-        let baseCol = color(0);  // default
+        let c = this.ringCells[i];
         let owner = this.trailOwner[i];
         let lvl   = this.trailLevel[i];
-        if (owner==='playerOne') {
+        
+        let baseCol = color(0);
+  
+        if (owner==='WINNER') {
+          // 🚨 entire ring pixel is forcibly the winner color
+          baseCol = this.winnerColor || color(255,0,0); 
+        } else if (owner==='playerOne') {
           let colA = color(255);
           let colB = color(197,171,255);
           baseCol = lerpColor(colA, colB, lvl/4.0);
         } else if(owner==='playerTwo') {
           let colA = color(255);
           let colB = color(0,250,154);
-          baseCol = lerpColor(colA,colB,lvl/4.0);
+          baseCol = lerpColor(colA, colB, lvl/4.0);
         }
         fill(baseCol);
+  
+        // optional offsets if needed
         rect(c.x*this.tileSize + xOffset, c.y*this.tileSize + yOffset, this.tileSize, this.tileSize);
       }
       pop();
     }
   }
   
-  /************************************************
-   * Midpoint Circle function
-   ************************************************/
+  // Midpoint circle + helpers
+  
   function midpointCircle(cx, cy, r) {
     let pts=[];
     let x=0, y=r;
@@ -163,6 +147,7 @@ class Display {
     }
     return pts;
   }
+  
   function addAllOctants(cx,cy,x,y,arr){
     arr.push({x:cx+x,y:cy+y});
     arr.push({x:cx-x,y:cy+y});
@@ -173,6 +158,7 @@ class Display {
     arr.push({x:cx+y,y:cy-x});
     arr.push({x:cx-y,y:cy-x});
   }
+  
   function uniquePoints(arr){
     let s=new Set();
     let out=[];

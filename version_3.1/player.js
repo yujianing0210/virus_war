@@ -4,6 +4,9 @@ class Player {
         this.baseColor = baseColor;
         this.health = 100; // Full health (4 hits)
         this.color = baseColor;
+
+        // Add a hitFlashTimer that counts down each frame
+        this.hitFlashTimer = 0;
     }
 
     takeDamage() {
